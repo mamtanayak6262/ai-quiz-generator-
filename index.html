@@ -1,0 +1,563 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuizGen AI - Smart Quiz Generator</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+font-family:Arial,sans-serif;
+background:#080d1d;
+color:white;
+min-height:100vh;
+}
+
+header{
+padding:22px 7%;
+display:flex;
+justify-content:space-between;
+align-items:center;
+border-bottom:1px solid #26314c;
+background:#10182b;
+}
+
+.logo{
+font-size:25px;
+font-weight:bold;
+color:#48d9ff;
+}
+
+.logo span{color:#a78bfa}
+
+.badge{
+background:#17334a;
+color:#48d9ff;
+padding:8px 14px;
+border-radius:20px;
+font-size:12px;
+}
+
+.container{
+max-width:950px;
+margin:45px auto;
+padding:20px;
+}
+
+.hero{text-align:center;margin-bottom:35px}
+
+.hero h1{
+font-size:40px;
+margin-bottom:12px;
+}
+
+.hero h1 span{
+background:linear-gradient(90deg,#42d9ff,#a78bfa);
+background-clip:text;
+-webkit-background-clip:text;
+color:transparent;
+}
+
+.hero p{color:#aab5cd;line-height:1.6}
+
+.panel{
+background:#111c32;
+border:1px solid #293957;
+padding:28px;
+border-radius:18px;
+box-shadow:0 15px 40px #0005;
+}
+
+label{
+display:block;
+margin:18px 0 9px;
+color:#dce8ff;
+font-weight:bold;
+}
+
+input,select{
+width:100%;
+padding:14px;
+background:#091326;
+border:1px solid #344765;
+border-radius:9px;
+color:white;
+font-size:15px;
+outline:none;
+}
+
+input:focus,select:focus{
+border-color:#42d9ff;
+}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:18px;
+}
+
+button{
+border:none;
+cursor:pointer;
+font-size:15px;
+font-weight:bold;
+border-radius:9px;
+padding:14px 20px;
+transition:.2s;
+}
+
+button:hover{transform:translateY(-2px)}
+
+.generate{
+width:100%;
+margin-top:25px;
+background:linear-gradient(90deg,#08bce8,#7655f6);
+color:white;
+}
+
+.secondary{
+background:#263753;
+color:white;
+}
+
+#status{
+text-align:center;
+color:#42d9ff;
+margin-top:17px;
+}
+
+#quizArea{margin-top:25px}
+
+.question-card{
+background:#111c32;
+border:1px solid #344765;
+border-radius:14px;
+padding:22px;
+margin-bottom:18px;
+}
+
+.question-card h3{
+margin-bottom:17px;
+line-height:1.5;
+}
+
+.option{
+display:block;
+padding:13px;
+margin:9px 0;
+border:1px solid #344765;
+border-radius:9px;
+cursor:pointer;
+background:#0b1427;
+}
+
+.option:hover{border-color:#42d9ff}
+
+.option input{
+width:auto;
+margin-right:10px;
+}
+
+.option.correct{
+border-color:#22c55e;
+background:#123322;
+}
+
+.option.wrong{
+border-color:#ef4444;
+background:#391a25;
+}
+
+.explanation{
+display:none;
+margin-top:13px;
+padding:12px;
+background:#1a2941;
+border-radius:8px;
+color:#c5d5ee;
+line-height:1.5;
+}
+
+#result{
+display:none;
+text-align:center;
+background:#14243c;
+padding:25px;
+border-radius:15px;
+margin-top:20px;
+}
+
+.score{
+font-size:42px;
+color:#42d9ff;
+font-weight:bold;
+margin:15px;
+}
+
+.hidden{display:none}
+
+footer{
+text-align:center;
+padding:30px;
+color:#71809e;
+}
+
+@media(max-width:600px){
+.hero h1{font-size:29px}
+.grid{grid-template-columns:1fr}
+.panel{padding:19px}
+header{padding:18px}
+.container{margin:20px auto}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="logo">QuizGen <span>AI</span></div>
+<div class="badge">✦ POWERED BY AI</div>
+</header>
+
+<div class="container">
+
+<div class="hero">
+<h1>AI <span>Quiz Generator</span></h1>
+<p>Create intelligent quizzes instantly using Artificial Intelligence.</p>
+</div>
+
+<div class="panel" id="setup">
+
+<h2>🚀 Create Your Quiz</h2>
+
+<label>Groq API Key</label>
+<input type="password" id="apiKey" placeholder="Enter your Groq API key">
+
+<label>Quiz Topic</label>
+<input type="text" id="topic" placeholder="Example: Science, Computer, History...">
+
+<div class="grid">
+
+<div>
+<label>Difficulty Level</label>
+<select id="difficulty">
+<option>Easy</option>
+<option selected>Medium</option>
+<option>Hard</option>
+</select>
+</div>
+
+<div>
+<label>Number of Questions</label>
+<select id="count">
+<option value="5">5 Questions</option>
+<option value="10" selected>10 Questions</option>
+<option value="20">20 Questions</option>
+</select>
+</div>
+
+</div>
+
+<button class="generate" id="generateBtn" onclick="generateQuiz()">
+✨ Generate Quiz with AI
+</button>
+
+<div id="status"></div>
+
+</div>
+
+<div id="quizArea" class="hidden">
+
+<div class="panel">
+<h2 id="quizTitle">Your Quiz</h2>
+<p id="progress" style="color:#aab5cd;margin-top:10px"></p>
+</div>
+
+<div id="questions"></div>
+
+<button class="generate" id="submitBtn" onclick="submitQuiz()">
+Submit Quiz & Check Score
+</button>
+
+<div id="result">
+<h2>🎉 Quiz Completed!</h2>
+<div class="score" id="score"></div>
+<p id="message"></p>
+<br>
+<button class="secondary" onclick="resetQuiz()">Create Another Quiz</button>
+</div>
+
+</div>
+
+</div>
+
+<footer>
+QuizGen AI © 2026 | Smart Learning Platform
+</footer>
+
+<script>
+
+let quizData = [];
+let submitted = false;
+
+async function generateQuiz(){
+
+const apiKey = document.getElementById("apiKey").value.trim();
+const topic = document.getElementById("topic").value.trim();
+const difficulty = document.getElementById("difficulty").value;
+const count = Number(document.getElementById("count").value);
+
+const status = document.getElementById("status");
+const btn = document.getElementById("generateBtn");
+
+if(!apiKey){
+alert("Please enter your Groq API Key!");
+return;
+}
+
+if(!topic){
+alert("Please enter a quiz topic!");
+return;
+}
+
+btn.disabled = true;
+status.innerText = "⏳ AI is creating your quiz...";
+
+try{
+
+const prompt = `
+Create exactly ${count} multiple choice quiz questions
+about "${topic}" at ${difficulty} difficulty.
+
+Return ONLY valid JSON in this exact structure:
+{
+"title":"Quiz title",
+"questions":[
+{
+"question":"Question text",
+"options":["Option A","Option B","Option C","Option D"],
+"answer":0,
+"explanation":"Explanation of the answer"
+}
+]
+}
+
+Rules:
+- Each question must have exactly 4 options.
+- Answer must be an index from 0 to 3.
+- Questions must be factually correct.
+- Do not repeat questions.
+- Explanations should be short.
+- No markdown or extra text.
+`;
+
+const response = await fetch(
+"https://api.groq.com/openai/v1/chat/completions",
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Bearer "+apiKey
+},
+body:JSON.stringify({
+model:"llama-3.3-70b-versatile",
+messages:[
+{
+role:"system",
+content:"You are an expert educational quiz generator. Return only valid JSON."
+},
+{
+role:"user",
+content:prompt
+}
+],
+temperature:0.7,
+max_tokens:6000
+})
+}
+);
+
+const data = await response.json();
+
+if(!response.ok){
+throw new Error(data.error?.message || "API request failed");
+}
+
+let output = data.choices[0].message.content;
+
+output = output.replace(/```json/gi,"").replace(/```/g,"").trim();
+
+const start = output.indexOf("{");
+const end = output.lastIndexOf("}");
+
+if(start === -1 || end === -1){
+throw new Error("AI returned invalid JSON. Please try again.");
+}
+
+const result = JSON.parse(output.substring(start,end+1));
+
+if(!Array.isArray(result.questions) ||
+result.questions.length !== count){
+throw new Error("AI returned an incorrect number of questions. Try again.");
+}
+
+result.questions.forEach(q=>{
+if(typeof q.question !== "string" ||
+!Array.isArray(q.options) ||
+q.options.length !== 4 ||
+!Number.isInteger(q.answer) ||
+q.answer < 0 || q.answer > 3){
+throw new Error("Invalid question format received.");
+}
+});
+
+quizData = result.questions;
+submitted = false;
+
+document.getElementById("setup").classList.add("hidden");
+document.getElementById("quizArea").classList.remove("hidden");
+
+document.getElementById("quizTitle").innerText =
+result.title || topic+" Quiz";
+
+document.getElementById("progress").innerText =
+count+" Questions | "+difficulty+" Level";
+
+renderQuestions();
+
+status.innerText = "";
+
+}catch(error){
+
+status.innerText = "❌ "+error.message;
+
+}finally{
+btn.disabled = false;
+btn.innerText = "✨ Generate Quiz with AI";
+}
+
+}
+
+function renderQuestions(){
+
+const container = document.getElementById("questions");
+container.innerHTML = "";
+
+quizData.forEach((q,index)=>{
+
+const card = document.createElement("div");
+card.className = "question-card";
+
+const heading = document.createElement("h3");
+heading.textContent = (index+1)+". "+q.question;
+card.appendChild(heading);
+
+q.options.forEach((option,i)=>{
+
+const label = document.createElement("label");
+label.className = "option";
+
+const radio = document.createElement("input");
+radio.type = "radio";
+radio.name = "question"+index;
+radio.value = i;
+
+label.appendChild(radio);
+label.appendChild(document.createTextNode(option));
+card.appendChild(label);
+
+});
+
+const explanation = document.createElement("div");
+explanation.className = "explanation";
+explanation.id = "explanation"+index;
+card.appendChild(explanation);
+
+container.appendChild(card);
+
+});
+
+}
+
+function submitQuiz(){
+
+if(submitted)return;
+
+let score = 0;
+
+quizData.forEach((q,index)=>{
+
+const selected = document.querySelector(
+'input[name="question'+index+'"]:checked'
+);
+
+const card = document.getElementById("questions").children[index];
+const labels = card.querySelectorAll(".option");
+
+labels.forEach((label,i)=>{
+
+const radio = label.querySelector("input");
+radio.disabled = true;
+
+if(i === q.answer){
+label.classList.add("correct");
+}
+
+if(selected && i === Number(selected.value) && i !== q.answer){
+label.classList.add("wrong");
+}
+
+});
+
+if(selected && Number(selected.value) === q.answer){
+score++;
+}
+
+const explanation = document.getElementById("explanation"+index);
+explanation.style.display = "block";
+explanation.textContent =
+"Explanation: "+(q.explanation || "Review the correct answer above.");
+
+});
+
+submitted = true;
+
+const percentage = Math.round(score/quizData.length*100);
+
+document.getElementById("score").innerText =
+score+" / "+quizData.length;
+
+document.getElementById("message").innerText =
+"Your score is "+percentage+"%";
+
+document.getElementById("result").style.display = "block";
+document.getElementById("submitBtn").style.display = "none";
+
+document.getElementById("result").scrollIntoView({
+behavior:"smooth"
+});
+
+}
+
+function resetQuiz(){
+
+quizData = [];
+submitted = false;
+
+document.getElementById("quizArea").classList.add("hidden");
+document.getElementById("setup").classList.remove("hidden");
+
+document.getElementById("questions").innerHTML = "";
+document.getElementById("result").style.display = "none";
+document.getElementById("submitBtn").style.display = "block";
+document.getElementById("status").innerText = "";
+
+}
+
+</script>
+
+</body>
+</html>
